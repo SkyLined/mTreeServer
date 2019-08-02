@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Loading...</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js">/* https://jquery.com/ */</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js">/* https://www.jstree.com/ */</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.5.11/split.min.js">/* https://split.js.org/ */</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.0/showdown.min.js">/* http://showdownjs.com/ */</script>
+    <script>
+      var oTreeContainer = null,
+          dxRootTreeNode = null,
+          oJSTreeWrapper = null,
+          oJSTree = null,
+          oMarkdown2HTMLConverter = new showdown.Converter();
+      // When the JSTree DOM object is ready or the tree JSON has been retreived,
+      // fInitializeWhenReady is called. When both are true (on the second call
+      // to this function, the tree is constructed.
+      function fUpdateTree() {
+        if (oTreeContainer == null || dxRootTreeNode == null) return;
+        console.log("Updating...");
+        // Create instance
+        oTreeContainer.textContent = "";
+        if (!oJSTreeWrapper) {
+          oJSTreeWrapper = oTreeContainer.jstree({
+            "plugins": ["state"],
+          });
+          oJSTree = oJSTreeWrapper.jstree();
+          oJSTreeWrapper.on("activate_node.jstree", (oEvent, oData) => {
+            if (oData.node.id) console.log("Clicked on " + JSON.stringify(oData.node.id));
+            if (oData.node.data) {
+              let dxData = oData.node.data;
+              if (dxData.sType == "text") {
+                oDetailsContainer.textContent = dxData.sData;
+                oDetailsContainer.className = "text";
+              } else if (dxData.sType == "html") {
+                oDetailsContainer.innerHTML = dxData.sData;
+                oDetailsContainer.className = "html";
+              } else if (dxData.sType == "markdown") {
+                oDetailsContainer.innerHTML = oMarkdown2HTMLConverter.makeHtml(dxData.sData);
+                oDetailsContainer.className = "markdown";
+              } else if (dxData.sType == "node-link") {
+                console.log("Link to " + JSON.stringify(dxData.sData));
+                oJSTree._open_to(dxData.sData)[0].scrollIntoView();
+                oJSTree.activate_node(dxData.sData);
+              } else if (dxData.sType == "link") {
+                open(dxData.sData, "_blank");
+              } else {
+                oDetailsContainer.textContent = "Unknown details type " + JSON.stringify(dxData.sType);
+              };
+            } else {
+              oDetailsContainer.textContent = "(no details)";
+            };
+          });
+        }
+        document.title = dxRootTreeNode.text;
+        oJSTree.settings.core.data = [dxRootTreeNode];
+        oJSTree.refresh(true);
+        console.log("Updated.");
+      };
+      
+      console.log("Loading DOM...");
+      $(() => {
+        console.log("DOM loaded.");
+        Split(["#oTreeContainer", "#oDetailsContainer"], {
+          "sizes": [25, 75],
+        });
+        oTreeContainer = $("#oTreeContainer");
+        console.log("oTreeContainer:");
+        console.log(oTreeContainer);
+        fUpdateTree();
+      });
+      fRequestTreeDataAndUpdateTreeAndRepeatUntilComplete();
+      
+      function fRequestTreeDataAndUpdateTreeAndRepeatUntilComplete() {
+        fRequestTreeData((dxTreeData) => {
+          dxRootTreeNode = dxTreeData.dxRootTreeNode;
+          fUpdateTree();
+          if (dxTreeData.nNextRefreshTimeoutInSeconds) {
+            setTimeout(fRequestTreeDataAndUpdateTreeAndRepeatUntilComplete, dxTreeData.nNextRefreshTimeoutInSeconds * 1000);
+          };
+        });
+      };
+      function fRequestTreeData(fCallback) {
+        console.log("Requesting tree JSON...");
+        fetch("/dxTreeData.json", {}).then((oResponse) => {
+          console.log("Tree data JSON response received.");
+          if (!oResponse.ok) {
+            throw new Error("HTTP error");
+          };
+          console.log("Parsing tree data JSON...");
+          return oResponse.json();
+        }).then((dxTreeData) => {
+          console.log("Tree data JSON parsed.");
+          fCallback(dxTreeData);
+        });
+      };
+    </script>
+    <style>
+      html, body {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+        font-family: monospace;
+      }
+      #oMainWrapper {
+        display: flex;
+        flex-direction: row;
+        height: 100%;
+      }
+      .text {
+        white-space: pre;
+      }
+      #oTreeContainer, #oDetailsContainer {
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+      .gutter {
+        background-color: #eee;
+        background-repeat: no-repeat;
+        background-position: 50%;
+      }
+      .gutter.gutter-horizontal {
+        background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
+        cursor: col-resize;
+        float: left;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="oMainWrapper">
+      <div id="oTreeContainer">Loading...</div>
+      <div id="oDetailsContainer">Loading...</div>
+    </div>
+  </body>
+</html>

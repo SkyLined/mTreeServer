@@ -2,7 +2,9 @@
   "asDependentOnProductNames": [
     "mHTTP",
     "mDebugOutput",
-    "mMultiThreading"
+    "mMultiThreading",
+    "mWindowsSDK",
+    "cFileSystemItem"
   ], 
   "oProductVersion": "2019-07-30 12:34", 
   "oRepository": {

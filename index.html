@@ -8,75 +8,163 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.5.11/split.min.js">/* https://split.js.org/ */</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.0/showdown.min.js">/* http://showdownjs.com/ */</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.2.228/pdf.js">/* https://github.com/mozilla/pdf.js */</script>
     <script>
-      var oTreeContainer = null,
-          dxRootTreeNode = null,
-          oJSTreeWrapper = null,
-          oJSTree = null,
-          oMarkdown2HTMLConverter = new showdown.Converter();
+      "use strict";
+      var goTreeContainer = null,
+          goDetailsContainer = null,
+          gadxTreeNodes = null,
+          goJSTreeWrapper = null,
+          goJSTree = null,
+          goMarkdown2HTMLConverter = new showdown.Converter(),
+          bInitialized = false;
       // When the JSTree DOM object is ready or the tree JSON has been retreived,
       // fInitializeWhenReady is called. When both are true (on the second call
       // to this function, the tree is constructed.
+      function fActivateNodeById(sNodeId) {
+        location.hash = "#" + encodeURI(sNodeId);
+        fActivateNodeByIdFromHash();
+      };
+      var guActivateNodeTimeout = null,
+          gsActiveNodeId = null;
+      function fActivateNodeByIdFromHash() {
+        if (guActivateNodeTimeout !== null) {
+          clearTimeout(guActivateNodeTimeout);
+          guActivateNodeTimeout = null;
+        };
+        const sNodeId = decodeURI(location.hash.substr(1));
+        if (gsActiveNodeId == sNodeId) return;
+        const oContainer = goJSTree._open_to(sNodeId);
+        if (oContainer.length) {
+          console.log("Opening " + JSON.stringify(sNodeId));
+          gsActiveNodeId = sNodeId;
+          oContainer[0].scrollIntoView();
+          goJSTree.open_node(sNodeId);
+          goJSTree.activate_node(sNodeId);
+        } else {
+          console.error("Cannot open " + JSON.stringify(sNodeId));
+          guActivateNodeTimeout = setTimeout(fActivateNodeByIdFromHash, 1000 / 24);
+        };
+      };
+      
+      addEventListener("hashchange", fActivateNodeByIdFromHash);
+      function fSearch(oSearchElement, bActivateFirstResults) {
+        let sSearch = oSearchElement.value,
+            sSearchRegExpEscaped = sSearch.replace(new RegExp('[.\\\\+*?\\[\\^\\]$(){}=!<>|:\\-]', 'g'), '\\$&'),
+            sWildCardSearchRegExp = sSearchRegExpEscaped.replace(/\\\*/g, '.*').replace(/\\\?/g, '.'),
+            rWildCardSearch = new RegExp(sWildCardSearchRegExp, "gi"),
+            adxQueuedNodes = gadxTreeNodes.slice(),
+            adxMatchedNodes = [];
+        goJSTree.deselect_all();
+        goJSTree.close_all();
+        while (adxQueuedNodes.length > 0) {
+          let dxNode = adxQueuedNodes.pop(),
+              bFoundMatch = false;
+          if (dxNode.text.match(rWildCardSearch)) {
+            adxMatchedNodes.push(dxNode);
+            console.log("Selected " + dxNode.text + "/" + dxNode.id);
+            goJSTree.open_node(dxNode.id);
+            goJSTree.select_node(dxNode.id);
+          };
+          if (dxNode.children) {
+            adxQueuedNodes = adxQueuedNodes.concat(dxNode.children);
+          };
+        };
+        if (adxMatchedNodes.length > 0) {
+          oSearchElement.classList.remove("no-search-results");
+          if (bActivateFirstResults) {
+            fActivateNodeById(adxMatchedNodes[0].id);
+          };
+        } else {
+          oSearchElement.classList.add("no-search-results");
+        };
+      };
+      
       function fUpdateTree() {
-        if (oTreeContainer == null || dxRootTreeNode == null) return;
+        if (goTreeContainer == null || gadxTreeNodes == null) return;
         console.log("Updating...");
         // Create instance
-        oTreeContainer.textContent = "";
-        if (!oJSTreeWrapper) {
-          oJSTreeWrapper = oTreeContainer.jstree({
+        if (!goJSTreeWrapper) {
+          goJSTreeWrapper = goTreeContainer.jstree({
             "plugins": ["state"],
           });
-          oJSTree = oJSTreeWrapper.jstree();
-          oJSTreeWrapper.on("activate_node.jstree", (oEvent, oData) => {
-            if (oData.node.id) console.log("Clicked on " + JSON.stringify(oData.node.id));
+          goJSTreeWrapper.on("activate_node.jstree", (oEvent, oData) => {
+            console.log("Activated " + JSON.stringify(oData.node.id) + " (" + JSON.stringify(oData.node.data) + ")");
+            goDetailsContainer.textContent = "";
+            gsActiveNodeId = oData.node.id;
             if (oData.node.data) {
               let dxData = oData.node.data;
               if (dxData.sType == "text") {
-                oDetailsContainer.textContent = dxData.sData;
-                oDetailsContainer.className = "text";
+                let oTextDIV = goDetailsContainer.appendChild(document.createElement("div"));
+                oTextDIV.className = "text-container";
+                oTextDIV.textContent = dxData.sData;
               } else if (dxData.sType == "html") {
-                oDetailsContainer.innerHTML = dxData.sData;
-                oDetailsContainer.className = "html";
+                let oHTMLDIV = goDetailsContainer.appendChild(document.createElement("div"));
+                oHTMLDIV.className = "html-container";
+                oHTMLDIV.innerHTML = dxData.sData;
               } else if (dxData.sType == "markdown") {
-                oDetailsContainer.innerHTML = oMarkdown2HTMLConverter.makeHtml(dxData.sData);
-                oDetailsContainer.className = "markdown";
+                let oMarkdownDIV = goDetailsContainer.appendChild(document.createElement("div"));
+                oMarkdownDIV.className = "markdown-container";
+                oMarkdownDIV.innerHTML = goMarkdown2HTMLConverter.makeHtml(dxData.sData);
               } else if (dxData.sType == "node-link") {
-                console.log("Link to " + JSON.stringify(dxData.sData));
-                oJSTree._open_to(dxData.sData)[0].scrollIntoView();
-                oJSTree.activate_node(dxData.sData);
+                fActivateNodeById(dxData.sData);
               } else if (dxData.sType == "link") {
                 open(dxData.sData, "_blank");
+              } else if (dxData.sType == "iframe") {
+                let oIFrame = goDetailsContainer.appendChild(document.createElement("iframe"));
+                oIFrame.className = "iframe-container";
+                oIFrame.src = dxData.sData;
               } else {
-                oDetailsContainer.textContent = "Unknown details type " + JSON.stringify(dxData.sType);
+                let oUnknownDIV = goDetailsContainer.appendChild(document.createElement("div"));
+                oUnknownDIV.className = "unknown-container";
+                oUnknownDIV.textContent = "Unknown type " + JSON.stringify(dxData.sType) + "!";
               };
-            } else {
-              oDetailsContainer.textContent = "(no details)";
             };
           });
-        }
-        document.title = dxRootTreeNode.text;
-        oJSTree.settings.core.data = [dxRootTreeNode];
-        oJSTree.refresh(true);
+          goJSTree = goJSTreeWrapper.jstree();
+        };
+        goJSTree.settings.core.data = gadxTreeNodes;
+        goJSTree.refresh(/*skip_loading*/true, /*forget_state*/false);
         console.log("Updated.");
       };
       
       console.log("Loading DOM...");
       $(() => {
         console.log("DOM loaded.");
-        Split(["#oTreeContainer", "#oDetailsContainer"], {
+        Split(["#oLeftColumnContainer", "#oRightColumnContainer"], {
           "sizes": [25, 75],
         });
-        oTreeContainer = $("#oTreeContainer");
-        console.log("oTreeContainer:");
-        console.log(oTreeContainer);
+        let oLeftColumnContainer = document.getElementById("oLeftColumnContainer"),
+            oSearchElement = oLeftColumnContainer.appendChild(document.createElement("input")),
+            oTreeContainerElement = oLeftColumnContainer.appendChild(document.createElement("div"));
+        oSearchElement.classList.add("search-input");
+        
+        oTreeContainerElement.id = "oTreeContainer";
+        oTreeContainerElement.classList.add("tree-container");
+        goTreeContainer = $("#oTreeContainer");
+        
+        goDetailsContainer = document.getElementById("oRightColumnContainer");
+        goDetailsContainer.className = "details-container";
         fUpdateTree();
+        
+        oSearchElement.addEventListener("input", () => {
+          fSearch(oSearchElement, false);
+        });
+        oSearchElement.addEventListener("keyup", (oEvent) => {
+          if (oEvent.key == "Enter") {
+            fSearch(oSearchElement, true);
+          };
+        });
       });
       fRequestTreeDataAndUpdateTreeAndRepeatUntilComplete();
       
       function fRequestTreeDataAndUpdateTreeAndRepeatUntilComplete() {
         fRequestTreeData((dxTreeData) => {
-          dxRootTreeNode = dxTreeData.dxRootTreeNode;
+          document.title = dxTreeData.sTitle;
+          gadxTreeNodes = dxTreeData.adxTreeNodes;
           fUpdateTree();
+          const sNodeId = decodeURI(location.hash.substr(1));
+          if (sNodeId) fActivateNodeById(sNodeId);
           if (dxTreeData.nNextRefreshTimeoutInSeconds) {
             setTimeout(fRequestTreeDataAndUpdateTreeAndRepeatUntilComplete, dxTreeData.nNextRefreshTimeoutInSeconds * 1000);
           };
@@ -84,7 +172,7 @@
       };
       function fRequestTreeData(fCallback) {
         console.log("Requesting tree JSON...");
-        fetch("/dxTreeData.json", {}).then((oResponse) => {
+        fetch("dxTreeData.json", {}).then((oResponse) => {
           console.log("Tree data JSON response received.");
           if (!oResponse.ok) {
             throw new Error("HTTP error");
@@ -110,15 +198,83 @@
         flex-direction: row;
         height: 100%;
       }
-      .text {
-        white-space: pre;
-      }
-      #oTreeContainer, #oDetailsContainer {
+      .tree-container {
         overflow-y: auto;
-        overflow-x: hidden;
+        overflow-x: auto;
+        height: calc(
+          100%
+          - 2 * 3px /* margin of search-input */
+          - 2 * 1px /* border of search-input */
+          - 2 * 1px /* padding of search-input */
+          - 18px /* height of search-input */
+        );
+      }
+      .search-input {
+        height: 18px;
+        width: calc(
+          100%
+          - 2 * 3px /* margin */
+          - 2 * 1px /* border */
+          - 20px /* padding-left */
+        );
+        margin: 3px;
+        border: 1px solid #ddd;
+        padding: 1px 1px 1px 20px;
+        border-radius: 5px;
+        background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAB6klEQVQ4jZWSTWsTURSG37m5J/2YqdV8DERBbHY2mKngQhSE/gUXblyIiLYU2oVgix+LQiuoBYW4MKErl/4LhVJBwSQkcSOaopgSZyY2TFN07s0dF0oRJyH1bF+e53AOr4Y+M5/LDY1JY45zfkMKmQYATvyT9Lt5L+rlny4s/AQArRd89/HzY4zhZdw0UxnL0mOJJACgZduolssd1/nWCLqYvn/zyteQYD6XGzqsxquT2eyJSWuK91pQKxXl+0ql3mbtU+zfcEwac3HTTPWDASAzdZrHk+bRQ8KYCQk4p5mMZen94H2JldUjnGZDAunLiVgiMYhHLJGEkCIdEgRaEAyk8fv7GhCEBES01bKdgQLXscE51Xud8KxWLu0NEtRK5U5XinxIINTeC8e2ebX4ri9cLRWl69gN8ox85O/gzpNCirORza6UCdd1RXN7+8eoPhodHhmGUgp2s4k3Gxudz1v1L4HC9Mrtyzv7RVp6UDhORK8DxlJQQYOIzgrhX4xwmhVSpAGAiD52hSiQZ+SXly/5wJ8q31tbnwgY36QomcIXTSHVmUdL1xqD/gAAbPHh+kkV4W8NQzeFkC1NyfMHhQGAcYq8ih0Zj3m7u21fBudWb12vHxQGAMagVVrfdxwodWFt8eqH/4EB4BexHsjFophbDgAAAABJRU5ErkJggg==");
+        background-repeat: no-repeat;
+        background-origin: padding-box;
+        background-position: 2px 50%;
+      }
+      .search-input.no-search-results {
+        background-color: #FDD;
+      };
+      .details-container {
+        overflow-y: auto;
+        overflow-x: auto;
+        background: #DDD;
+      }
+      .text-container {
+        margin: 10px;
+        border: 1px solid #888;
+        border-radius: 10px;
+        padding: 10px;
+        white-space: pre;
+        background: #FFF;
+      }
+      .html-container {
+        margin: 0;
+        border: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .markdown-container {
+        margin: 10px;
+        border: 1px solid #888;
+        border-radius: 10px;
+        padding: 10px;
+        background: #FFF;
+      }
+      .iframe-container {
+        margin: 0;
+        border: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .unknown-container {
+        margin: 10px;
+        border: 0;
+        padding: 0;
+      }
+      .nothing-container {
+        margin: 10px;
+        border: 0;
+        padding: 0;
       }
       .gutter {
-        background-color: #eee;
+        background-color: #EEE;
         background-repeat: no-repeat;
         background-position: 50%;
       }
@@ -131,8 +287,8 @@
   </head>
   <body>
     <div id="oMainWrapper">
-      <div id="oTreeContainer">Loading...</div>
-      <div id="oDetailsContainer">Loading...</div>
+      <div id="oLeftColumnContainer"></div>
+      <div id="oRightColumnContainer"></div>
     </div>
   </body>
 </html>

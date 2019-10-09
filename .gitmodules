@@ -7,3 +7,6 @@
 [submodule "modules/mMultiThreading"]
 	path = modules/mMultiThreading
 	url = https://github.com/SkyLined/mMultiThreading/
+[submodule "modules/mWindowsSDK"]
+	path = modules/mWindowsSDK
+	url = https://github.com/SkyLined/mWindowsSDK/

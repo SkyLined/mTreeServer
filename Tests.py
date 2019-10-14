@@ -3,8 +3,10 @@ import os, sys;
 sModuleFolder = os.path.dirname(__file__);
 sBaseFolder = os.path.dirname(sModuleFolder);
 sys.path.append(sBaseFolder);
-
-from cTreeServer import cTreeServer;
+from mDebugOutput import fShowFileDebugOutputForClass;
+from cFileSystemItem import cFileSystemItem;
+fShowFileDebugOutputForClass(cFileSystemItem);
+from cTreeServer import cTreeServer, cTreeNode;
 from mMultiThreading import cThread;
 
 def fMain():

@@ -11,6 +11,7 @@ goIconsFolder = cFileSystemItem(__file__).oParent.foGetChild("icons", bMustBeFol
 class cTreeNode(object):
   sNamespace = "cTreeNode";
   oIconsFolder = goIconsFolder;
+  
   def __init__(oSelf, sName, sType = None, xData = None, sId = None, oIconFile = None, bOpened = None, bDisabled = None, bSelected = None, sToolTip = None):
     oSelf.sName = sName;
     oSelf.sType = sType; # Valid values: None, "text", "html", "markdown", "node-link", "link".
@@ -129,7 +130,7 @@ class cTreeNode(object):
     asRemarks = [];
     if oSelf.sType:
       if oSelf.sType == "node-link":
-        oTargetNode = oSelf.oRoot.foGetNodeById(oSelf.xData) if isinstance(oSelf.xData, str) \
+        oTargetNode = oSelf.oRoot.foGetNodeById(oSelf.xData) if isinstance(oSelf.xData, (str, unicode)) \
             else oSelf.xData if isinstance(oSelf.xData, cTreeNode) \
             else None;
         if not oTargetNode or oSelf.oRoot is not oTargetNode.oRoot:

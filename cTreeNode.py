@@ -133,8 +133,8 @@ class cTreeNode(object):
         oTargetNode = oSelf.oRoot.foGetNodeById(oSelf.xData) if isinstance(oSelf.xData, (str, unicode)) \
             else oSelf.xData if isinstance(oSelf.xData, cTreeNode) \
             else None;
-        if not oTargetNode or oSelf.oRoot is not oTargetNode.oRoot:
-          asRemarks.append("Broken link to " + repr(oSelf.xData));
+        if not oTargetNode or (oSelf.oRoot is not oTargetNode.oRoot):
+          asRemarks.append("Broken link to %s %s" %("external node" if oTargetNode else "unknown node", repr(oSelf.xData)));
           bForceDisabled = True;
           dxJSON["data"] = {
             "sType": oSelf.sType,

@@ -14,6 +14,7 @@
       var goTreeContainer = null,
           goDetailsContainer = null,
           gadxTreeNodes = null,
+          gbTreeIsStatic = false,
           goJSTreeWrapper = null,
           goJSTree = null,
           goMarkdown2HTMLConverter = new showdown.Converter(),
@@ -23,27 +24,31 @@
       // to this function, the tree is constructed.
       function fActivateNodeById(sNodeId) {
         location.hash = "#" + encodeURI(sNodeId);
-        fActivateNodeByIdFromHash();
       };
       var guActivateNodeTimeout = null,
           gsActiveNodeId = null;
       function fActivateNodeByIdFromHash() {
-        if (guActivateNodeTimeout !== null) {
-          clearTimeout(guActivateNodeTimeout);
-          guActivateNodeTimeout = null;
+        const sNodeIdFromHash = decodeURI(location.hash.substr(1));
+        if (!sNodeIdFromHash || gsActiveNodeId == sNodeIdFromHash) {
+          console.log("Not opening " + JSON.stringify(sNodeIdFromHash));
+          return;
         };
-        const sNodeId = decodeURI(location.hash.substr(1));
-        if (gsActiveNodeId == sNodeId) return;
-        const oContainer = goJSTree._open_to(sNodeId);
+        const oContainer = goJSTree._open_to(sNodeIdFromHash);
         if (oContainer.length) {
-          console.log("Opening " + JSON.stringify(sNodeId));
-          gsActiveNodeId = sNodeId;
+          console.log("Opening " + JSON.stringify(sNodeIdFromHash));
+          goJSTree.open_node(sNodeIdFromHash);
+          gsActiveNodeId = sNodeIdFromHash;
+          goJSTree.activate_node(sNodeIdFromHash);
           oContainer[0].scrollIntoView();
-          goJSTree.open_node(sNodeId);
-          goJSTree.activate_node(sNodeId);
-        } else {
-          console.error("Cannot open " + JSON.stringify(sNodeId));
-          guActivateNodeTimeout = setTimeout(fActivateNodeByIdFromHash, 1000 / 24);
+        } else if (gbTreeIsStatic) {
+          if (guActivateNodeTimeout === null) {
+            // So weirdly enough it takes some time for the tree to be updated and this to work. I do not know why or
+            // how long. I will set a timeout to try aain in 1 second to hopefully fix this.
+            console.error("Set timeout");
+            guActivateNodeTimeout = setTimeout(fActivateNodeByIdFromHash, 1000);
+          } else {
+            console.error("Cannot open " + JSON.stringify(sNodeIdFromHash));
+          };
         };
       };
       
@@ -89,9 +94,12 @@
             "plugins": ["state"],
           });
           goJSTreeWrapper.on("activate_node.jstree", (oEvent, oData) => {
+            if (!oData.node) {
+              console.log("Nothing activated");
+            };
             console.log("Activated " + JSON.stringify(oData.node.id) + " (" + JSON.stringify(oData.node.data) + ")");
             goDetailsContainer.textContent = "";
-            gsActiveNodeId = oData.node.id;
+            let sNodeIdToActivate = gsActiveNodeId = oData.node.id;
             if (oData.node.data) {
               let dxData = oData.node.data;
               if (dxData.sType == "text") {
@@ -107,7 +115,7 @@
                 oMarkdownDIV.className = "markdown-container";
                 oMarkdownDIV.innerHTML = goMarkdown2HTMLConverter.makeHtml(dxData.sData);
               } else if (dxData.sType == "node-link") {
-                fActivateNodeById(dxData.sData);
+                sNodeIdToActivate = dxData.sData;
               } else if (dxData.sType == "link") {
                 open(dxData.sData, "_blank");
               } else if (dxData.sType == "iframe") {
@@ -120,6 +128,7 @@
                 oUnknownDIV.textContent = "Unknown type " + JSON.stringify(dxData.sType) + "!";
               };
             };
+            fActivateNodeById(sNodeIdToActivate);
           });
           goJSTree = goJSTreeWrapper.jstree();
         };
@@ -162,12 +171,14 @@
         fRequestTreeData((dxTreeData) => {
           document.title = dxTreeData.sTitle;
           gadxTreeNodes = dxTreeData.adxTreeNodes;
-          fUpdateTree();
-          const sNodeId = decodeURI(location.hash.substr(1));
-          if (sNodeId) fActivateNodeById(sNodeId);
           if (dxTreeData.nNextRefreshTimeoutInSeconds) {
             setTimeout(fRequestTreeDataAndUpdateTreeAndRepeatUntilComplete, dxTreeData.nNextRefreshTimeoutInSeconds * 1000);
+          } else {
+            console.log("Tree is now static!");
+            gbTreeIsStatic = true;
           };
+          fUpdateTree();
+          fActivateNodeByIdFromHash();
         });
       };
       function fRequestTreeData(fCallback) {

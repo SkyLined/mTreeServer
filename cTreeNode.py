@@ -12,12 +12,13 @@ class cTreeNode(object):
   sNamespace = "cTreeNode";
   oIconsFolder = goIconsFolder;
   
-  def __init__(oSelf, sName, sType = None, xData = None, sId = None, oIconFile = None, bOpened = None, bDisabled = None, bSelected = None, sToolTip = None):
+  def __init__(oSelf, sName, sType = None, xData = None, sId = None, oIconFile = None, sIconURL = None, bOpened = None, bDisabled = None, bSelected = None, sToolTip = None):
     oSelf.sName = sName;
     oSelf.sType = sType; # Valid values: None, "text", "html", "markdown", "node-link", "link".
     oSelf.xData = xData;
     oSelf.__sId = sId;
     oSelf.oIconFile = oIconFile;
+    oSelf.sIconURL = sIconURL;
     oSelf.bOpened = bOpened;
     oSelf.bDisabled = bDisabled;
     oSelf.bSelected = bSelected;
@@ -151,7 +152,9 @@ class cTreeNode(object):
           "sData": oSelf.xData,
         };
     dxJSON["id"] = oSelf.sId;
-    if oSelf.oIconFile is not None:
+    if oSelf.sIconURL is not None:
+      dxJSON["icon"] = oSelf.sIconURL;
+    elif oSelf.oIconFile is not None:
       dxJSON["icon"] = "icons/%s/%s" % (oSelf.sNamespace, oSelf.oIconFile.sName);
     if oSelf.__aoChildren:
       dxJSON["children"] = [oChild.fdxGetJSON() for oChild in oSelf.__aoChildren];

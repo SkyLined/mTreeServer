@@ -1,12 +1,12 @@
 {
   "asDependentOnProductNames": [
-    "mHTTP",
-    "mDebugOutput",
-    "mMultiThreading",
-    "mWindowsSDK",
+    "mHTTP", 
+    "mDebugOutput", 
+    "mMultiThreading", 
+    "mWindowsSDK", 
     "cFileSystemItem"
   ], 
-  "oProductVersion": "2019-07-30 12:34", 
+  "oProductVersion": "2019-10-17 07:14", 
   "oRepository": {
     "sBranch": "master", 
     "sRepositoryName": "cTreeServer", 

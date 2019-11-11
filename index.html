@@ -9,6 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.5.11/split.min.js">/* https://split.js.org/ */</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.0/showdown.min.js">/* http://showdownjs.com/ */</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.2.228/pdf.js">/* https://github.com/mozilla/pdf.js */</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js">/* https://highlightjs.org */</script>
     <script>
       "use strict";
       var goTreeContainer = null,
@@ -106,6 +107,7 @@
                 let oTextDIV = goDetailsContainer.appendChild(document.createElement("div"));
                 oTextDIV.className = "text-container";
                 oTextDIV.textContent = dxData.sData;
+                hljs.highlightBlock(oTextDIV);
               } else if (dxData.sType == "html") {
                 let oHTMLDIV = goDetailsContainer.appendChild(document.createElement("div"));
                 oHTMLDIV.className = "html-container";
@@ -114,6 +116,7 @@
                 let oMarkdownDIV = goDetailsContainer.appendChild(document.createElement("div"));
                 oMarkdownDIV.className = "markdown-container";
                 oMarkdownDIV.innerHTML = goMarkdown2HTMLConverter.makeHtml(dxData.sData);
+                hljs.highlightBlock(oMarkdownDIV);
               } else if (dxData.sType == "node-link") {
                 sNodeIdToActivate = dxData.sData;
               } else if (dxData.sType == "link") {
@@ -318,6 +321,51 @@
         background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
         cursor: col-resize;
         float: left;
+      }
+      /* Syntax highlighting */
+      .hljs {
+      }
+      .hljs-tag {
+        background-color: rgba(0, 255, 255, 0.075);
+      }
+      .hljs-attr,
+      .hljs-quote,
+      .hljs-keyword,
+      .hljs-selector-tag,
+      .hljs-built_in,
+      .hljs-name,
+      .hljs-title,
+      .hljs-section,
+      .hljs-attribute,
+      .hljs-literal,
+      .hljs-template-tag,
+      .hljs-type,
+      .hljs-addition,
+      .hljs-deletion,
+      .hljs-selector-attr,
+      .hljs-selector-pseudo,
+      .hljs-meta,
+      .hljs-symbol,
+      .hljs-bullet,
+      .hljs-link,
+      .hljs-doctag {
+        color: #000000;
+      }
+      .hljs-variable,
+      .hljs-template-variable {
+        color: #0000FF;
+      }
+      .hljs-comment {
+        background-color: rgba(255, 255, 0, 0.2);
+      }
+      .hljs-string {
+        background-color: rgba(0, 255, 0, 0.1);
+      }
+      .hljs-emphasis {
+        font-style: italic;
+      }
+      .hljs-strong {
+        font-weight: bold;
       }
     </style>
   </head>

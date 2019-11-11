@@ -145,12 +145,20 @@
         });
         let oLeftColumnContainer = document.getElementById("oLeftColumnContainer"),
             oSearchElement = oLeftColumnContainer.appendChild(document.createElement("input")),
-            oTreeContainerElement = oLeftColumnContainer.appendChild(document.createElement("div"));
+            oTreeContainerElement = oLeftColumnContainer.appendChild(document.createElement("div")),
+            oNotesContainerElement = oLeftColumnContainer.appendChild(document.createElement("div"));
         oSearchElement.classList.add("search-input");
         
         oTreeContainerElement.id = "oTreeContainer";
         oTreeContainerElement.classList.add("tree-container");
         goTreeContainer = $("#oTreeContainer");
+        
+        oNotesContainerElement.classList.add("notes-container");
+        oNotesContainerElement.appendChild(document.createTextNode("Created with "));
+        let oLinkElement = oNotesContainerElement.appendChild(document.createElement("A"));
+        oLinkElement.textContent = "cTreeServer";
+        oLinkElement.href = "https://github.com/SkyLined/cTreeServer";
+        oNotesContainerElement.appendChild(document.createTextNode("."));
         
         goDetailsContainer = document.getElementById("oRightColumnContainer");
         goDetailsContainer.className = "details-container";
@@ -202,12 +210,32 @@
         padding: 0;
         margin: 0;
         overflow: hidden;
-        font-family: monospace;
       }
       #oMainWrapper {
         display: flex;
         flex-direction: row;
         height: 100%;
+      }
+      .search-input {
+        height: 18px;
+        width: calc(
+          100%
+          - 2 * 3px /* margin */
+          - 2 * 1px /* border */
+          - 21px /* padding */
+        );
+        margin: 3px;
+        border: 1px solid #ddd;
+        padding: 1px 1px 1px 20px;
+        border-radius: 5px;
+        background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAB6klEQVQ4jZWSTWsTURSG37m5J/2YqdV8DERBbHY2mKngQhSE/gUXblyIiLYU2oVgix+LQiuoBYW4MKErl/4LhVJBwSQkcSOaopgSZyY2TFN07s0dF0oRJyH1bF+e53AOr4Y+M5/LDY1JY45zfkMKmQYATvyT9Lt5L+rlny4s/AQArRd89/HzY4zhZdw0UxnL0mOJJACgZduolssd1/nWCLqYvn/zyteQYD6XGzqsxquT2eyJSWuK91pQKxXl+0ql3mbtU+zfcEwac3HTTPWDASAzdZrHk+bRQ8KYCQk4p5mMZen94H2JldUjnGZDAunLiVgiMYhHLJGEkCIdEgRaEAyk8fv7GhCEBES01bKdgQLXscE51Xud8KxWLu0NEtRK5U5XinxIINTeC8e2ebX4ri9cLRWl69gN8ox85O/gzpNCirORza6UCdd1RXN7+8eoPhodHhmGUgp2s4k3Gxudz1v1L4HC9Mrtyzv7RVp6UDhORK8DxlJQQYOIzgrhX4xwmhVSpAGAiD52hSiQZ+SXly/5wJ8q31tbnwgY36QomcIXTSHVmUdL1xqD/gAAbPHh+kkV4W8NQzeFkC1NyfMHhQGAcYq8ih0Zj3m7u21fBudWb12vHxQGAMagVVrfdxwodWFt8eqH/4EB4BexHsjFophbDgAAAABJRU5ErkJggg==");
+        background-repeat: no-repeat;
+        background-origin: padding-box;
+        background-position: 2px 50%;
+        font-size: 14px;
+      }
+      .search-input.no-search-results {
+        background-color: #FDD;
       }
       .tree-container {
         overflow-y: auto;
@@ -218,28 +246,23 @@
           - 2 * 1px /* border of search-input */
           - 2 * 1px /* padding of search-input */
           - 18px /* height of search-input */
+          - 2 * 1px /* padding of notes-container */
+          - 14px /* height of notes-container */
         );
+        font-family: monospace;
+        font-size: 14px;
       }
-      .search-input {
-        height: 18px;
+      .notes-container {
+        background-color: #EEE;
+        height: 14px;
+        font-size: 12px;
         width: calc(
           100%
-          - 2 * 3px /* margin */
-          - 2 * 1px /* border */
-          - 20px /* padding-left */
+          - 2px /* padding */
         );
-        margin: 3px;
-        border: 1px solid #ddd;
-        padding: 1px 1px 1px 20px;
-        border-radius: 5px;
-        background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAB6klEQVQ4jZWSTWsTURSG37m5J/2YqdV8DERBbHY2mKngQhSE/gUXblyIiLYU2oVgix+LQiuoBYW4MKErl/4LhVJBwSQkcSOaopgSZyY2TFN07s0dF0oRJyH1bF+e53AOr4Y+M5/LDY1JY45zfkMKmQYATvyT9Lt5L+rlny4s/AQArRd89/HzY4zhZdw0UxnL0mOJJACgZduolssd1/nWCLqYvn/zyteQYD6XGzqsxquT2eyJSWuK91pQKxXl+0ql3mbtU+zfcEwac3HTTPWDASAzdZrHk+bRQ8KYCQk4p5mMZen94H2JldUjnGZDAunLiVgiMYhHLJGEkCIdEgRaEAyk8fv7GhCEBES01bKdgQLXscE51Xud8KxWLu0NEtRK5U5XinxIINTeC8e2ebX4ri9cLRWl69gN8ox85O/gzpNCirORza6UCdd1RXN7+8eoPhodHhmGUgp2s4k3Gxudz1v1L4HC9Mrtyzv7RVp6UDhORK8DxlJQQYOIzgrhX4xwmhVSpAGAiD52hSiQZ+SXly/5wJ8q31tbnwgY36QomcIXTSHVmUdL1xqD/gAAbPHh+kkV4W8NQzeFkC1NyfMHhQGAcYq8ih0Zj3m7u21fBudWb12vHxQGAMagVVrfdxwodWFt8eqH/4EB4BexHsjFophbDgAAAABJRU5ErkJggg==");
-        background-repeat: no-repeat;
-        background-origin: padding-box;
-        background-position: 2px 50%;
+        padding: 1px;
+        text-align: center;
       }
-      .search-input.no-search-results {
-        background-color: #FDD;
-      };
       .details-container {
         overflow-y: auto;
         overflow-x: auto;
@@ -252,6 +275,8 @@
         padding: 10px;
         white-space: pre;
         background: #FFF;
+        font-family: monospace;
+        font-size: 14px;
       }
       .html-container {
         margin: 0;

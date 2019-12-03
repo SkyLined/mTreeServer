@@ -25,6 +25,7 @@
       // to this function, the tree is constructed.
       function fActivateNodeById(sNodeId) {
         location.hash = "#" + encodeURI(sNodeId);
+        document.title = sNodeId;
       };
       var guActivateNodeTimeout = null,
           gsActiveNodeId = null;
@@ -100,7 +101,7 @@
             };
             console.log("Activated " + JSON.stringify(oData.node.id) + " (" + JSON.stringify(oData.node.data) + ")");
             goDetailsContainer.textContent = "";
-            let sNodeIdToActivate = gsActiveNodeId = oData.node.id;
+            let sNodeIdToActivate = oData.node.id;
             if (oData.node.data) {
               let dxData = oData.node.data;
               if (dxData.sType == "text") {
@@ -119,7 +120,7 @@
                 hljs.highlightBlock(oMarkdownDIV);
               } else if (dxData.sType == "node-link") {
                 sNodeIdToActivate = dxData.sData;
-              } else if (dxData.sType == "link") {
+              } else if (dxData.sType == "url-link") {
                 open(dxData.sData, "_blank");
               } else if (dxData.sType == "iframe") {
                 let oIFrame = goDetailsContainer.appendChild(document.createElement("iframe"));

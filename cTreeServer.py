@@ -1,18 +1,18 @@
 import json, os;
-from mHTTP import cHTTPServer, cURL, fsGetMediaTypeForExtension;
 from cTreeNode import cTreeNode;
 from cFileSystemItem import cFileSystemItem;
+import mHTTP;
 
 goIndexHTMLFile = cFileSystemItem(__file__).oParent.foGetChild("index.html", bMustBeFile = True);
-gsJSONMediaType = fsGetMediaTypeForExtension("json");
-gsTextMediaType = fsGetMediaTypeForExtension("txt");
+gsJSONMediaType = mHTTP.fsGetMediaTypeForExtension("json");
+gsTextMediaType = mHTTP.fsGetMediaTypeForExtension("txt");
 
 def gfoCreateResponseForRequestAndFile(oRequest, oFile):
   assert oFile.fbIsFile(), \
       "%s is not a file!" % oFile.sPath;
   return oRequest.foCreateReponse(
     uStatusCode = 200,
-    sMediaType = fsGetMediaTypeForExtension(oFile.sExtension),
+    sMediaType = mHTTP.fsGetMediaTypeForExtension(oFile.sExtension),
     sBody = oFile.fsRead(),
   );
 
@@ -21,7 +21,7 @@ class cTreeServer(cTreeNode):
   def __init__(oSelf, sTitle, **dxHTTPServerArguments):
     cTreeNode.__init__(oSelf, "cTreeServer root node");
     
-    oSelf.oHTTPServer = cHTTPServer(**dxHTTPServerArguments);
+    oSelf.oHTTPServer = mHTTP.cHTTPServer(**dxHTTPServerArguments);
     oSelf.sURL = oSelf.oHTTPServer.sURL;
     oSelf.sTitle = sTitle;
     oSelf.__bStatic = False;

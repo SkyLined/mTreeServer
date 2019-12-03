@@ -1,5 +1,6 @@
 import os;
 from cFileSystemItem import cFileSystemItem;
+import mHTTP;
 
 def gfCheckIfIdIsUsedInTreeForNode(sId, oRootNode, oNode):
   oExistingNodeWithId = oRootNode.foGetNodeById(sId)
@@ -59,11 +60,15 @@ class cTreeNode(object):
     oSelf.sType = "node-link";
     oSelf.xData = sTargetId;
   
-  def fLinkToURL(oSelf, sURL):
-    # No sanity checks; can be used to link to nodes that will be added to the
-    # tree later.
-    oSelf.sType = "link";
-    oSelf.xData = sURL;
+  def fLinkToURL(oSelf, xURL):
+    oSelf.sType = "url-link";
+    oSelf.xData = (
+        xURL.sAbsolute if isinstance(xURL, mHTTP.cURL) else \
+        xURL if isinstance(xURL, (str, unicode)) else \
+        None
+    );
+    assert oSelf.xData, \
+        "Invalid URL: %s" % repr(xURL);
   
   def foGetNodeById(oSelf, sId):
     if oSelf.sId == sId: return oSelf;

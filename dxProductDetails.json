@@ -6,7 +6,7 @@
     "mWindowsSDK", 
     "cFileSystemItem"
   ], 
-  "oProductVersion": "2019-12-13 08:18", 
+  "oProductVersion": "2019-12-18 09:04", 
   "oRepository": {
     "sBranch": "master", 
     "sRepositoryName": "cTreeServer", 

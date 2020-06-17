@@ -1,16 +1,17 @@
 {
   "asDependentOnProductNames": [
     "cFileSystemItem",
-    "mDebugOutput", 
     "mHTTP", 
     "mHTTPConnections",
     "mHTTPProtocol",
     "mMultiThreading", 
+    "mProductDetails", 
     "mSSL",
     "mTCPIPConnections",
     "mWindowsSDK"
   ], 
   "asOptionalProductNames": [
+    "mDebugOutput",
     "oConsole"
   ],
   "oProductVersion": "2020-06-16 08:47", 

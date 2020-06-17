@@ -28,3 +28,12 @@
 [submodule "modules\\oConsole"]
 	path = modules\\oConsole
 	url = https://github.com/SkyLined/oConsole
+[submodule "modules\\mDateTime"]
+	path = modules\\mDateTime
+	url = https://github.com/SkyLined/mDateTime
+[submodule "modules\\mRegistry"]
+	path = modules\\mRegistry
+	url = https://github.com/SkyLined/mRegistry
+[submodule "modules\\mProductDetails"]
+	path = modules\\mProductDetails
+	url = https://github.com/SkyLined/mProductDetails

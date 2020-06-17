@@ -1,19 +1,21 @@
 {
   "asDependentOnProductNames": [
-    "cFileSystemItem",
+    "cFileSystemItem", 
     "mHTTP", 
-    "mHTTPConnections",
-    "mHTTPProtocol",
+    "mHTTPConnections", 
+    "mHTTPProtocol", 
     "mMultiThreading", 
     "mProductDetails", 
-    "mSSL",
-    "mTCPIPConnections",
-    "mWindowsSDK"
+    "mSSL", 
+    "mTCPIPConnections", 
+    "mWindowsSDK", 
+    "mDateTime", 
+    "mRegistry"
   ], 
   "asOptionalProductNames": [
-    "mDebugOutput",
+    "mDebugOutput", 
     "oConsole"
-  ],
+  ], 
   "oProductVersion": "2020-06-16 08:47", 
   "oRepository": {
     "sBranch": "master", 
@@ -21,6 +23,8 @@
     "sType": "GitHub", 
     "sUserName": "SkyLined"
   }, 
+  "oTrialPeriodDuration": null, 
+  "sLicenseServerURL": null, 
   "sProductAuthor": "SkyLined", 
   "sProductName": "cTreeServer", 
   "sProductURL": "https://github.com/SkyLined/cTreeServer"

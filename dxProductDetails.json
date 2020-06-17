@@ -10,6 +10,9 @@
     "mTCPIPConnections",
     "mWindowsSDK"
   ], 
+  "asOptionalProductNames": [
+    "oConsole"
+  ],
   "oProductVersion": "2020-06-16 08:47", 
   "oRepository": {
     "sBranch": "master", 
@@ -17,8 +20,6 @@
     "sType": "GitHub", 
     "sUserName": "SkyLined"
   }, 
-  "oTrialPeriodDuration": null, 
-  "sLicenseServerURL": null, 
   "sProductAuthor": "SkyLined", 
   "sProductName": "cTreeServer", 
   "sProductURL": "https://github.com/SkyLined/cTreeServer"

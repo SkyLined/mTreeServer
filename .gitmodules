@@ -25,3 +25,6 @@
 [submodule "modules\\mHTTPProtocol"]
 	path = modules\\mHTTPProtocol
 	url = https://github.com/SkyLined/mHTTPProtocol
+[submodule "modules\\oConsole"]
+	path = modules\\oConsole
+	url = https://github.com/SkyLined/oConsole

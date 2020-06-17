@@ -13,13 +13,15 @@
     "mDebugOutput", 
     "oConsole"
   ], 
-  "oProductVersion": "2020-06-16 08:47", 
+  "oProductVersion": "2020-06-17 16:31", 
   "oRepository": {
     "sBranch": "master", 
     "sRepositoryName": "cTreeServer", 
     "sType": "GitHub", 
     "sUserName": "SkyLined"
   }, 
+  "oTrialPeriodDuration": null, 
+  "sLicenseServerURL": null, 
   "sProductAuthor": "SkyLined", 
   "sProductName": "cTreeServer", 
   "sProductURL": "https://github.com/SkyLined/cTreeServer"

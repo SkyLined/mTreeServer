@@ -1,4 +1,5 @@
 import json, os;
+from mDebugOutput import ShowDebugOutput;
 from cTreeNode import cTreeNode;
 from cFileSystemItem import cFileSystemItem;
 import mHTTP;
@@ -7,41 +8,56 @@ goIndexHTMLFile = cFileSystemItem(__file__).oParent.foGetChild("index.html", bMu
 gsJSONMediaType = mHTTP.fsGetMediaTypeForExtension("json");
 gsTextMediaType = mHTTP.fsGetMediaTypeForExtension("txt");
 
-def gfoCreateResponseForRequestAndFile(oRequest, oFile):
-  assert oFile.fbIsFile(), \
-      "%s is not a file!" % oFile.sPath;
-  return oRequest.foCreateReponse(
-    uStatusCode = 200,
-    sMediaType = mHTTP.fsGetMediaTypeForExtension(oFile.sExtension),
-    sBody = oFile.fsRead(),
-  );
-
 class cTreeServer(cTreeNode):
   cTreeNode = cTreeNode;
-  def __init__(oSelf, sTitle, **dxHTTPServerArguments):
+  @ShowDebugOutput
+  def __init__(oSelf, sTitle, bOffline = False, **dxHTTPServerArguments):
     cTreeNode.__init__(oSelf, "cTreeServer root node");
     
-    oSelf.oHTTPServer = mHTTP.cHTTPServer(**dxHTTPServerArguments);
-    oSelf.sURL = oSelf.oHTTPServer.sURL;
+    oSelf.__oHTTPServer = None if bOffline else mHTTP.cHTTPServer(oSelf.__ftxRequestHandler, **dxHTTPServerArguments);
     oSelf.sTitle = sTitle;
     oSelf.__bStatic = False;
     oSelf.doFile_by_sRelativeURL = {};
   
+  @property
+  def sHostname(oSelf):
+    return oSelf.__oHTTPServer.sHostname;
+  @property
+  def uPort(oSelf):
+    return oSelf.__oHTTPServer.uPort;
+  @property
+  def ozSSLContext(oSelf):
+    return oSelf.__oHTTPServer.ozSSLContext;
+  @property
+  def bSecure(oSelf):
+    return oSelf.__oHTTPServer.bSecure;
+  @property
+  def sIPAddress(oSelf):
+    return oSelf.__oHTTPServer.sIPAddress;
+  @property
+  def bTerminated(oSelf):
+    return not oSelf.__oTerminatedLock.bLocked;
+  @property
+  def oURL(oSelf):
+    return oSelf.__oHTTPServer.oURL;
+  
+  @ShowDebugOutput
   def fMakeStatic(oSelf):
     oSelf.__bStatic = True;
   
-  def fStart(oSelf):
-    oSelf.oHTTPServer.fStart(oSelf.__fRequestHandler);
-
+  @ShowDebugOutput
   def fWait(oSelf):
-    oSelf.oHTTPServer.fWait();
+    oSelf.__oHTTPServer.fWait();
   
+  @ShowDebugOutput
   def fStop(oSelf):
-    oSelf.oHTTPServer.fStop();
+    oSelf.__oHTTPServer.fStop();
   
+  @ShowDebugOutput
   def fTerminate(oSelf):
-    oSelf.oHTTPServer.fTerminate();
+    oSelf.__oHTTPServer.fTerminate();
   
+  @ShowDebugOutput
   def fdxGetOfflineContent(oSelf):
     dxOfflineContent = {
       "index.html": goIndexHTMLFile,
@@ -70,47 +86,42 @@ class cTreeServer(cTreeNode):
       ],
       "nNextRefreshTimeoutInSeconds": None if oSelf.__bStatic else 1,
     });
-  def __fRequestHandler(oSelf, oHTTPServer, oConnectionFromClient, oRequest):
+  
+  @ShowDebugOutput
+  def __ftxRequestHandler(oSelf, oHTTPServer, oConnectionFromClient, oRequest):
+    def ftxCreateResponse(uStatusCode, sMediaType, sBody):
+      oResponse = oRequest.foCreateReponse(
+        uzStatusCode = uStatusCode,
+        szMediaType = sMediaType,
+        szBody = sBody,
+      );
+      return (oResponse, True);
+    def ftxCreateResponseForFile(oFile):
+      return ftxCreateResponse(200, mHTTP.fsGetMediaTypeForExtension(oFile.sExtension), oFile.fsRead());
+
     # Filter out invalid methods
     if oRequest.sMethod.upper() != "GET":
-      return oRequest.foCreateReponse(
-        uStatusCode = 405,
-        sMediaType = gsTextMediaType,
-        sBody = "Method %s not allowed" % json.dumps(oRequest.sMethod),
-      );
-    
-    sPath = oHTTPServer.foGetRequestURL(oRequest).sURLDecodedPath;
+      return ftxCreateResponse(405, gsTextMediaType, "Method %s not allowed" % json.dumps(oRequest.sMethod));
+    sPath = oHTTPServer.foGetURLForRequest(oRequest).sURLDecodedPath;
     # handle index HTML
     if sPath == "/":
-      return gfoCreateResponseForRequestAndFile(oRequest, goIndexHTMLFile);
+      return ftxCreateResponseForFile(goIndexHTMLFile);
     # handle icons
     if sPath.startswith("/icons/") and "/" in sPath[7:]:
       sNamespace, sIconFileName = sPath[7:].split("/", 1);
       for oDescendant in oSelf.aoDescendants:
         if oDescendant.sNamespace == sNamespace and oDescendant.oIconFile and oDescendant.oIconFile.sName == sIconFileName:
-          return gfoCreateResponseForRequestAndFile(oRequest, oDescendant.oIconFile);
+          return ftxCreateResponseForFile(oDescendant.oIconFile);
     if sPath in oSelf.doFile_by_sRelativeURL:
-      return gfoCreateResponseForRequestAndFile(oRequest, oSelf.doFile_by_sRelativeURL[sPath]);
+      return ftxCreateResponseForFile(oSelf.doFile_by_sRelativeURL[sPath]);
     # handle tree data JSON
     if sPath == "/dxTreeData.json":
-      oResponse = oRequest.foCreateReponse(
-        uStatusCode = 200,
-        sMediaType = gsJSONMediaType,
-        sBody = oSelf.fsGetTreeDataJSON(),
-      );
+      sBody = oSelf.fsGetTreeDataJSON();
       oSelf.fDiscardUserState();
-      return oResponse;
+      return ftxCreateResponse(200, gsJSONMediaType, sBody);
     if sPath == "/stop":
       oSelf.fStop();
-      return oRequest.foCreateReponse(
-        uStatusCode = 200,
-        sMediaType = gsTextMediaType,
-        sBody = "Stopping",
-      );
+      return ftxCreateResponse(200, gsTextMediaType, "Stopping");
     
     # Path not found
-    return oRequest.foCreateReponse(
-      uStatusCode = 404,
-      sMediaType = gsTextMediaType,
-      sBody = "URL %s not found" % json.dumps(oRequest.sURL),
-    );
+    return ftxCreateResponse(404, gsTextMediaType, "URL %s not found" % json.dumps(oRequest.sURL));

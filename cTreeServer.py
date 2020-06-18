@@ -104,6 +104,7 @@ class cTreeServer(cTreeNode):
         uzStatusCode = uStatusCode,
         szMediaType = sMediaType,
         szBody = sBody,
+        bAutomaticallyAddContentLengthHeader = True,
       );
       return (oResponse, True);
     def ftxCreateResponseForFile(oFile):

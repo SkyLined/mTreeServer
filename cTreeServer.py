@@ -74,10 +74,10 @@ class cTreeServer(cTreeNode):
       "dxTreeData.json": oSelf.fsGetTreeDataJSON(),
     };
     for (sRelativeURL, oFile) in oSelf.doFile_by_sRelativeURL.items():
-      assert sRelativeURL[0] != "/", \
+      assert sRelativeURL[0] == "/", \
           "Absolute URL %s provide in doFile_by_sRelativeURL" % sRelativeURL;
       # Strip the leading "/" and replace all slashes with os path separators.
-      sRelativePath = sRelativeURL.replace("/", os.sep);
+      sRelativePath = sRelativeURL[1:].replace("/", os.sep);
       dxOfflineContent[sRelativePath] = oFile;
     aoTreeNodes = [oSelf] + oSelf.aoDescendants;
     for oTreeNode in aoTreeNodes:
@@ -123,8 +123,9 @@ class cTreeServer(cTreeNode):
       for oDescendant in oSelf.aoDescendants:
         if oDescendant.sNamespace == sNamespace and oDescendant.oIconFile and oDescendant.oIconFile.sName == sIconFileName:
           return ftxCreateResponseForFile(oDescendant.oIconFile);
-    if sPath in oSelf.doFile_by_sRelativeURL:
-      return ftxCreateResponseForFile(oSelf.doFile_by_sRelativeURL[sPath]);
+    oFile = oSelf.doFile_by_sRelativeURL.get(sPath);
+    if oFile:
+      return ftxCreateResponseForFile(oFile);
     # handle tree data JSON
     if sPath == "/dxTreeData.json":
       sBody = oSelf.fsGetTreeDataJSON();

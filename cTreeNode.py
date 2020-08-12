@@ -106,10 +106,14 @@ class cTreeNode(object):
   
   @property
   def aoDescendants(oSelf):
+    return oSelf.faoGetDescendantsWithCallback();
+
+  def faoGetDescendantsWithCallback(oSelf, fCallback = None):
     aoDescendants = [];
     for oChild in oSelf.__aoChildren:
+      fCallback and fCallback(oChild);
       aoDescendants.append(oChild);
-      aoDescendants.extend(oChild.aoDescendants);
+      aoDescendants.extend(oChild.faoGetDescendantsWithCallback(fCallback));
     return aoDescendants;
 
   def fRemoveChild(oSelf, oChild):

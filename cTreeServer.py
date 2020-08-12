@@ -68,7 +68,7 @@ class cTreeServer(cTreeNode):
     oSelf.__oHTTPServer.fTerminate();
   
   @ShowDebugOutput
-  def fdxGetOfflineContent(oSelf):
+  def fdxGetOfflineContent(oSelf, fProgressCallback = None):
     dxOfflineContent = {
       "index.html": goIndexHTMLFile,
       "dxTreeData.json": oSelf.fsGetTreeDataJSON(),
@@ -79,7 +79,7 @@ class cTreeServer(cTreeNode):
       # Strip the leading "/" and replace all slashes with os path separators.
       sRelativePath = sRelativeURL[1:].replace("/", os.sep);
       dxOfflineContent[sRelativePath] = oFile;
-    aoTreeNodes = [oSelf] + oSelf.aoDescendants;
+    aoTreeNodes = [oSelf] + oSelf.faoGetDescendantsWithCallback(fProgressCallback);
     for oTreeNode in aoTreeNodes:
       if oTreeNode.oIconFile:
         sRelativePath = os.sep.join(["icons", oTreeNode.sNamespace, oTreeNode.oIconFile.sName]);

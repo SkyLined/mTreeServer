@@ -15,8 +15,12 @@ from cFileSystemItem import cFileSystemItem;
 import mHTTP;
 
 goIndexHTMLFile = cFileSystemItem(__file__).oParent.foGetChild("index.html", bMustBeFile = True);
-gsJSONMediaType = mHTTP.fsGetMediaTypeForExtension("json");
-gsTextMediaType = mHTTP.fsGetMediaTypeForExtension("txt");
+gsJSONMediaType = mHTTP.fs0GetMediaTypeForExtension("json");
+assert gsJSONMediaType, \
+    "Could not get media type for JSON data";
+gsTextMediaType = mHTTP.fs0GetMediaTypeForExtension("txt");
+assert gsTextMediaType, \
+    "Could not get media type for TEXT data";
 
 class cTreeServer(cTreeNode):
   cTreeNode = cTreeNode;
@@ -108,7 +112,10 @@ class cTreeServer(cTreeNode):
       );
       return (oResponse, True);
     def ftxCreateResponseForFile(oFile):
-      return ftxCreateResponse(200, mHTTP.fsGetMediaTypeForExtension(oFile.sExtension), oFile.fsRead());
+      # Pick a media type based on the extension or use the default if there
+      # is no known media type for this extension.
+      sMediaType = mHTTP.fs0GetMediaTypeForExtension(oFile.sExtension) or "application/octet-stream";
+      return ftxCreateResponse(200, sMediaTyoe, oFile.fsRead());
 
     # Filter out invalid methods
     if oRequest.sMethod.upper() != "GET":

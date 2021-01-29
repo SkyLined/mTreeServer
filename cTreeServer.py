@@ -22,6 +22,23 @@ gsTextMediaType = mHTTP.fs0GetMediaTypeForExtension("txt");
 assert gsTextMediaType, \
     "Could not get media type for TEXT data";
 
+def foCreateResponseForRequest(oRequest, uStatusCode, sMediaType, sBody):
+  return oRequest.foCreateReponse(
+    uzStatusCode = uStatusCode,
+    s0MediaType = sMediaType,
+    s0Body = sBody,
+    bAutomaticallyAddContentLengthHeader = True,
+  );
+def foCreateResponseForRequestAndFile(oRequest, oFile):
+  # Pick a media type based on the extension or use the default if there
+  # is no known media type for this extension.
+  return oRequest.foCreateReponse(
+    uzStatusCode = 200,
+    s0MediaType = mHTTP.fs0GetMediaTypeForExtension(oFile.sExtension) or "application/octet-stream",
+    s0Body = oFile.fsRead(),
+    bAutomaticallyAddContentLengthHeader = True,
+  );
+
 class cTreeServer(cTreeNode):
   cTreeNode = cTreeNode;
   @ShowDebugOutput
@@ -103,44 +120,49 @@ class cTreeServer(cTreeNode):
   
   @ShowDebugOutput
   def __ftxRequestHandler(oSelf, oHTTPServer, oConnectionFromClient, oRequest):
-    def ftxCreateResponse(uStatusCode, sMediaType, sBody):
-      oResponse = oRequest.foCreateReponse(
-        uzStatusCode = uStatusCode,
-        szMediaType = sMediaType,
-        szBody = sBody,
-        bAutomaticallyAddContentLengthHeader = True,
-      );
-      return (oResponse, True);
-    def ftxCreateResponseForFile(oFile):
-      # Pick a media type based on the extension or use the default if there
-      # is no known media type for this extension.
-      sMediaType = mHTTP.fs0GetMediaTypeForExtension(oFile.sExtension) or "application/octet-stream";
-      return ftxCreateResponse(200, sMediaType, oFile.fsRead());
-
+    # Parse the URL in the request and extract the URL-decoded "path" component.
+    sPath = oHTTPServer.foGetURLForRequest(oRequest).sURLDecodedPath;
+    return (
+      oSelf.__foCreateResponseForRequestAndPath(oRequest, sPath),
+      True, # Allways stay connected to client.
+    );
+  
+  @ShowDebugOutput
+  def __foCreateResponseForRequestAndPath(oSelf, oRequest, sPath):
     # Filter out invalid methods
     if oRequest.sMethod.upper() != "GET":
-      return ftxCreateResponse(405, gsTextMediaType, "Method %s not allowed" % json.dumps(oRequest.sMethod));
-    sPath = oHTTPServer.foGetURLForRequest(oRequest).sURLDecodedPath;
+      fShowDebugOutput("Method %s is not allows" % oRequest.sMethod);
+      return (
+        foCreateResponseForRequest(oRequest, 405, gsTextMediaType, "Method %s not allowed" % json.dumps(oRequest.sMethod)),
+        True
+      );
     # handle index HTML
     if sPath == "/":
-      return ftxCreateResponseForFile(goIndexHTMLFile);
+      fShowDebugOutput("GET %s => index file %s" % (sPath, goIndexHTMLFile));
+      return foCreateResponseForRequestAndFile(oRequest, goIndexHTMLFile);
     # handle icons
     if sPath.startswith("/icons/") and "/" in sPath[7:]:
       sNamespace, sIconFileName = sPath[7:].split("/", 1);
       for oDescendant in oSelf.aoDescendants:
         if oDescendant.sNamespace == sNamespace and oDescendant.oIconFile and oDescendant.oIconFile.sName == sIconFileName:
-          return ftxCreateResponseForFile(oDescendant.oIconFile);
+          fShowDebugOutput("GET %s => icon file %s" % (sPath, oDescendant.oIconFile));
+          return foCreateResponseForRequestAndFile(oRequest, oDescendant.oIconFile);
+      fShowDebugOutput("GET %s => icons namespace %s does not have a file %s" % (sPath, repr(sNamespace), repr(sIconFileName)));
     oFile = oSelf.doFile_by_sRelativeURL.get(sPath);
     if oFile:
-      return ftxCreateResponseForFile(oFile);
+      fShowDebugOutput("GET %s => file %s" % (sPath, oFile));
+      return foCreateResponseForRequestAndFile(oRequest, oFile);
     # handle tree data JSON
     if sPath == "/dxTreeData.json":
+      fShowDebugOutput("GET %s => tree data" % (sPath,));
       sBody = oSelf.fsGetTreeDataJSON();
       oSelf.fDiscardUserState();
-      return ftxCreateResponse(200, gsJSONMediaType, sBody);
+      return foCreateResponseForRequest(oRequest, 200, gsJSONMediaType, sBody);
     if sPath == "/stop":
+      fShowDebugOutput("GET %s => stopping..." % (sPath,));
       oSelf.fStop();
-      return ftxCreateResponse(200, gsTextMediaType, "Stopping");
+      return foCreateResponseForRequest(oRequest, 200, gsTextMediaType, "Stopping");
     
     # Path not found
-    return ftxCreateResponse(404, gsTextMediaType, "URL %s not found" % json.dumps(oRequest.sURL));
+    fShowDebugOutput("GET %s => not found!" % (sPath,));
+    return foCreateResponseForRequest(oRequest, 404, gsTextMediaType, "URL %s not found" % json.dumps(oRequest.sURL));

@@ -30,12 +30,21 @@ try:
       def fStatus(*txArguments, **dxArguments):
         pass;
   
-  import urllib;
-  import cTreeServer, mHTTP;
-  
+  import sys, urllib;
+  from mHTTP import cHTTPClient;
   from cFileSystemItem import cFileSystemItem;
   from cTreeServer import cTreeServer, cTreeNode;
   from mMultiThreading import cThread;
+  
+  for sArgument in sys.argv[1:]:
+    if sArgument == "--debug":
+      assert mDebugOutput, \
+          "mDebugOutput module is not available";
+      mDebugOutput.fEnableDebugOutputForClass(cTreeServer);
+      mDebugOutput.fEnableDebugOutputForClass(cTreeNode);
+    else:
+      raise AssertionError("Unknown argument %s" % sArgument);
+  
   
   oTreeServer = cTreeServer("Test server");
   
@@ -51,16 +60,16 @@ try:
   oTreeServer.fMakeStatic();
   print "Server running @ %s" % oTreeServer.oURL;
   urllib.urlopen(str("http://example.com"));
-  oClient = mHTTP.cHTTPClient();
+  oClient = cHTTPClient();
   for oURL in [
     oTreeServer.oURL,
-    oTreeServer.oURL.foClone(szPath = "/dxTreeData.json"),
-    oTreeServer.oURL.foClone(szPath = "/stop"),
+    oTreeServer.oURL.foClone(s0zPath = "/dxTreeData.json"),
+    oTreeServer.oURL.foClone(s0zPath = "/stop"),
   ]:
     print "Loading page %s" % oURL;
-    oResponse = oClient.fozGetResponseForURL(oURL);
+    oResponse = oClient.fo0GetResponseForURL(oURL);
     assert oResponse and oResponse.uStatusCode == 200, \
-        "Unexpected response %s" % oResponse;
+        "Unexpected response:\n%s" % oResponse.fsSerialize();
   print "Waiting for server to stop...";
   oTreeServer.fWait();
   print "Done.";

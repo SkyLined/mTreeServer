@@ -10,9 +10,10 @@ except: # Do nothing if not available.
   fEnableAllDebugOutput = lambda: None;
   cCallStack = fTerminateWithException = fTerminateWithConsoleOutput = None;
 
-from cTreeNode import cTreeNode;
 from cFileSystemItem import cFileSystemItem;
 import mHTTP;
+
+from .cTreeNode import cTreeNode;
 
 goIndexHTMLFile = cFileSystemItem(__file__).oParent.foGetChild("index.html", bMustBeFile = True);
 gsJSONMediaType = mHTTP.fs0GetMediaTypeForExtension("json");

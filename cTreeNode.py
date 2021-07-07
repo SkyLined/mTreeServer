@@ -1,17 +1,15 @@
 import os;
 
 try: # mDebugOutput use is Optional
-  from mDebugOutput import *;
-except: # Do nothing if not available.
-  ShowDebugOutput = lambda fxFunction: fxFunction;
-  fShowDebugOutput = lambda sMessage: None;
-  fEnableDebugOutputForModule = lambda mModule: None;
-  fEnableDebugOutputForClass = lambda cClass: None;
-  fEnableAllDebugOutput = lambda: None;
-  cCallStack = fTerminateWithException = fTerminateWithConsoleOutput = None;
+  from mDebugOutput import ShowDebugOutput, fShowDebugOutput;
+except ModuleNotFoundError as oException:
+  if oException.args[0] != "No module named 'mDebugOutput'":
+    raise;
+  ShowDebugOutput = fShowDebugOutput = lambda x: x; # NOP
 
-from cFileSystemItem import cFileSystemItem;
-import mHTTP;
+from mFileSystemItem import cFileSystemItem;
+import mHTTPProtocol;
+from mNotProvided import *;
 
 def gfCheckIfIdIsUsedInTreeForNode(sId, oRootNode, oNode):
   oExistingNodeWithId = oRootNode.foGetNodeById(sId)
@@ -26,7 +24,7 @@ class cTreeNode(object):
   
   def __init__(oSelf, sName, sType = None, xData = None, sId = None, oIconFile = None, sIconURL = None, bOpened = None, bDisabled = None, bSelected = None, sToolTip = None):
     oSelf.sName = sName;
-    oSelf.sType = sType; # Valid values: None, "text", "html", "markdown", "node-link", "link".
+    oSelf.sType = sType; # Valid values: None, "text", "html", "markdown", "node-link", "url-link", "iframe", "img".
     oSelf.xData = xData;
     oSelf.__sId = sId;
     oSelf.oIconFile = oIconFile;
@@ -59,6 +57,7 @@ class cTreeNode(object):
     oSelf.__sId = sId;
   
   def fLinkToNode(oSelf, oTargetTreeNode):
+    fAssertType("oTargetTreeNode", oTargetTreeNode, cTreeNode);
     # Make sure oTargetTreeNode is part of the same tree as oSelf.
     assert oSelf.oRoot is oTargetTreeNode.oRoot, \
         "Cannot link to a node that is not part of the same tree!";
@@ -66,17 +65,17 @@ class cTreeNode(object):
     oSelf.xData = oTargetTreeNode;
   
   def fLinkToNodeId(oSelf, sTargetId):
-    # No sanity checks; can be used to link to nodes that will be added to the
-    # tree later.
+    fAssertType("sTargetId", sTargetId, str);
     oSelf.sType = "node-link";
     oSelf.xData = sTargetId;
   
   def fLinkToURL(oSelf, xURL):
+    fAssertType("xURL", xURL, mHTTPProtocol.cURL, str, bytes);
     oSelf.sType = "url-link";
     oSelf.xData = (
-        xURL.sAbsolute if isinstance(xURL, mHTTP.cURL) else \
-        xURL if isinstance(xURL, (str, unicode)) else \
-        None
+      str(xURL.sbAbsolute, "ascii", "strict") if isinstance(xURL, mHTTPProtocol.cURL) else \
+      str(xURL, "ascii", "strict") if isinstance(xURL, bytes) else \
+      xURL
     );
     assert oSelf.xData, \
         "Invalid URL: %s" % repr(xURL);
@@ -91,7 +90,7 @@ class cTreeNode(object):
   @property
   def oParent(oSelf):
     return oSelf.__oParent;
-
+  
   @property
   def oRoot(oSelf):
     # Ascend to the root node.
@@ -107,7 +106,7 @@ class cTreeNode(object):
   @property
   def aoDescendants(oSelf):
     return oSelf.faoGetDescendantsWithCallback();
-
+  
   def faoGetDescendantsWithCallback(oSelf, fCallback = None):
     aoDescendants = [];
     for oChild in oSelf.__aoChildren:
@@ -115,7 +114,7 @@ class cTreeNode(object):
       aoDescendants.append(oChild);
       aoDescendants.extend(oChild.faoGetDescendantsWithCallback(fCallback));
     return aoDescendants;
-
+  
   def fRemoveChild(oSelf, oChild):
     assert oChild in oSelf.__aoChildren, \
         "%s is not a child of %s" % (oChild.sName, oSelf.sName);
@@ -151,7 +150,7 @@ class cTreeNode(object):
     asRemarks = [];
     if oSelf.sType:
       if oSelf.sType == "node-link":
-        oTargetNode = oSelf.oRoot.foGetNodeById(oSelf.xData) if isinstance(oSelf.xData, (str, unicode)) \
+        oTargetNode = oSelf.oRoot.foGetNodeById(oSelf.xData) if isinstance(oSelf.xData, str) \
             else oSelf.xData if isinstance(oSelf.xData, cTreeNode) \
             else None;
         if not oTargetNode or (oSelf.oRoot is not oTargetNode.oRoot):

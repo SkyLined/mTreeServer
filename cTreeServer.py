@@ -1,42 +1,48 @@
 import json, os;
 
 try: # mDebugOutput use is Optional
-  from mDebugOutput import *;
-except: # Do nothing if not available.
-  ShowDebugOutput = lambda fxFunction: fxFunction;
-  fShowDebugOutput = lambda sMessage: None;
-  fEnableDebugOutputForModule = lambda mModule: None;
-  fEnableDebugOutputForClass = lambda cClass: None;
-  fEnableAllDebugOutput = lambda: None;
-  cCallStack = fTerminateWithException = fTerminateWithConsoleOutput = None;
+  from mDebugOutput import ShowDebugOutput, fShowDebugOutput;
+except ModuleNotFoundError as oException:
+  if oException.args[0] != "No module named 'mDebugOutput'":
+    raise;
+  ShowDebugOutput = fShowDebugOutput = lambda x: x; # NOP
 
-from cFileSystemItem import cFileSystemItem;
-import mHTTP;
+from mFileSystemItem import cFileSystemItem;
+import mHTTPProtocol;
+try:
+  import mHTTPServer as m0HTTPServer;
+except ModuleNotFoundError as oException:
+  if oException.args[0] != "No module named 'mHTTPServer'":
+    raise;
+  m0HTTPServer = None;
+
+from mNotProvided import *;
 
 from .cTreeNode import cTreeNode;
 
 goIndexHTMLFile = cFileSystemItem(__file__).oParent.foGetChild("index.html", bMustBeFile = True);
-gsJSONMediaType = mHTTP.fs0GetMediaTypeForExtension("json");
-assert gsJSONMediaType, \
+gsbJSONMediaType = mHTTPProtocol.fsb0GetMediaTypeForExtension("json");
+assert gsbJSONMediaType, \
     "Could not get media type for JSON data";
-gsTextMediaType = mHTTP.fs0GetMediaTypeForExtension("txt");
-assert gsTextMediaType, \
+gsbTextMediaType = mHTTPProtocol.fsb0GetMediaTypeForExtension("txt");
+assert gsbTextMediaType, \
     "Could not get media type for TEXT data";
 
-def foCreateResponseForRequest(oRequest, uStatusCode, sMediaType, sBody):
-  return oRequest.foCreateReponse(
+def foCreateResponseForRequest(oRequest, uStatusCode, sbMediaType, sbBody, sb0Charset = None):
+  return oRequest.foCreateResponse(
     uzStatusCode = uStatusCode,
-    s0MediaType = sMediaType,
-    s0Body = sBody,
+    sb0MediaType = sbMediaType,
+    sb0Body = sbBody,
+    sb0Charset = sb0Charset,
     bAutomaticallyAddContentLengthHeader = True,
   );
 def foCreateResponseForRequestAndFile(oRequest, oFile):
   # Pick a media type based on the extension or use the default if there
   # is no known media type for this extension.
-  return oRequest.foCreateReponse(
+  return oRequest.foCreateResponse(
     uzStatusCode = 200,
-    s0MediaType = mHTTP.fs0GetMediaTypeForExtension(oFile.sExtension) or "application/octet-stream",
-    s0Body = oFile.fsRead(),
+    sb0MediaType = mHTTPProtocol.fsb0GetMediaTypeForExtension(oFile.sExtension) or b"application/octet-stream",
+    sb0Body = oFile.fsbRead(),
     bAutomaticallyAddContentLengthHeader = True,
   );
 
@@ -44,34 +50,51 @@ class cTreeServer(cTreeNode):
   cTreeNode = cTreeNode;
   @ShowDebugOutput
   def __init__(oSelf, sTitle, bOffline = False, **dxHTTPServerArguments):
+    fAssertType("sTitle", sTitle, str);
     cTreeNode.__init__(oSelf, "cTreeServer root node");
-    
-    oSelf.__oHTTPServer = None if bOffline else mHTTP.cHTTPServer(oSelf.__ftxRequestHandler, **dxHTTPServerArguments);
+    if bOffline:
+      oSelf.__o0HTTPServer = None;
+    else:
+      assert m0HTTPServer is not None, \
+          "`cTreeServer` depends on `mHTTPServer` unless you call it with `bOffline = True`";
+      oSelf.__o0HTTPServer = m0HTTPServer.cHTTPServer(oSelf.__ftxRequestHandler, **dxHTTPServerArguments);
     oSelf.sTitle = sTitle;
     oSelf.__bStatic = False;
     oSelf.doFile_by_sRelativeURL = {};
   
   @property
-  def sHostname(oSelf):
-    return oSelf.__oHTTPServer.sHostname;
+  def sbHostname(oSelf):
+    assert oSelf.__o0HTTPServer is not None, \
+        "`sbHostname` is not available in offline mode!";
+    return oSelf.__o0HTTPServer.sbHostname;
   @property
-  def uPort(oSelf):
-    return oSelf.__oHTTPServer.uPort;
+  def uPortNumber(oSelf):
+    assert oSelf.__o0HTTPServer is not None, \
+        "`uPortNumber` is not available in offline mode!";
+    return oSelf.__o0HTTPServer.uPortNumber;
   @property
   def ozSSLContext(oSelf):
-    return oSelf.__oHTTPServer.ozSSLContext;
+    assert oSelf.__o0HTTPServer is not None, \
+        "`ozSSLContext` is not available in offline mode!";
+    return oSelf.__o0HTTPServer.ozSSLContext;
   @property
   def bSecure(oSelf):
-    return oSelf.__oHTTPServer.bSecure;
+    assert oSelf.__o0HTTPServer is not None, \
+        "`bSecure` is not available in offline mode!";
+    return oSelf.__o0HTTPServer.bSecure;
   @property
-  def sIPAddress(oSelf):
-    return oSelf.__oHTTPServer.sIPAddress;
+  def asbIPAddresses(oSelf):
+    assert oSelf.__o0HTTPServer is not None, \
+        "`sbIPAddress` is not available in offline mode!";
+    return oSelf.__o0HTTPServer.asbIPAddresses;
   @property
   def bTerminated(oSelf):
     return not oSelf.__oTerminatedLock.bLocked;
   @property
   def oURL(oSelf):
-    return oSelf.__oHTTPServer.oURL;
+    assert oSelf.__o0HTTPServer is not None, \
+        "`oURL` is not available in offline mode!";
+    return oSelf.__o0HTTPServer.oURL;
   
   @ShowDebugOutput
   def fMakeStatic(oSelf):
@@ -79,15 +102,21 @@ class cTreeServer(cTreeNode):
   
   @ShowDebugOutput
   def fWait(oSelf):
-    oSelf.__oHTTPServer.fWait();
+    assert oSelf.__o0HTTPServer is not None, \
+        "`fWait()` is not available in offline mode!";
+    oSelf.__o0HTTPServer.fWait();
   
   @ShowDebugOutput
   def fStop(oSelf):
-    oSelf.__oHTTPServer.fStop();
+    assert oSelf.__o0HTTPServer is not None, \
+        "`fStop()` is not available in offline mode!";
+    oSelf.__o0HTTPServer.fStop();
   
   @ShowDebugOutput
   def fTerminate(oSelf):
-    oSelf.__oHTTPServer.fTerminate();
+    assert oSelf.__o0HTTPServer is not None, \
+        "`fTerminate()` is not available in offline mode!";
+    oSelf.__o0HTTPServer.fTerminate();
   
   @ShowDebugOutput
   def fdxGetOfflineContent(oSelf, fProgressCallback = None):
@@ -122,7 +151,11 @@ class cTreeServer(cTreeNode):
   @ShowDebugOutput
   def __ftxRequestHandler(oSelf, oHTTPServer, oConnectionFromClient, oRequest):
     # Parse the URL in the request and extract the URL-decoded "path" component.
-    sPath = oHTTPServer.foGetURLForRequest(oRequest).sURLDecodedPath;
+    oRequestURL = oHTTPServer.foGetURLForRequest(oRequest);
+    sPath = oRequestURL.sURLDecodedPath;
+#    print ("oRequest.sbURL: %s" % repr(oRequest.sbURL));
+#    print ("oRequestURL: %s" % str(oRequestURL));
+#    print ("oRequest.sURLDecodedPath: %s" % repr(oRequestURL.sURLDecodedPath));
     return (
       oSelf.__foCreateResponseForRequestAndPath(oRequest, sPath),
       True, # Allways stay connected to client.
@@ -130,11 +163,12 @@ class cTreeServer(cTreeNode):
   
   @ShowDebugOutput
   def __foCreateResponseForRequestAndPath(oSelf, oRequest, sPath):
+    print("handling request for %s" % repr(sPath));
     # Filter out invalid methods
-    if oRequest.sMethod.upper() != "GET":
-      fShowDebugOutput("Method %s is not allows" % oRequest.sMethod);
+    if oRequest.sbMethod.upper() != b"GET":
+      fShowDebugOutput("Method %s is not allows" % repr(oRequest.sbMethod));
       return (
-        foCreateResponseForRequest(oRequest, 405, gsTextMediaType, "Method %s not allowed" % json.dumps(oRequest.sMethod)),
+        foCreateResponseForRequest(oRequest, 405, gsTextMediaType, b"Method %s not allowed" % oRequest.sbMethod),
         True
       );
     # handle index HTML
@@ -158,12 +192,12 @@ class cTreeServer(cTreeNode):
       fShowDebugOutput("GET %s => tree data" % (sPath,));
       sBody = oSelf.fsGetTreeDataJSON();
       oSelf.fDiscardUserState();
-      return foCreateResponseForRequest(oRequest, 200, gsJSONMediaType, sBody);
+      return foCreateResponseForRequest(oRequest, 200, gsbJSONMediaType, bytes(sBody, "utf-8", "strict"), b"utf-8");
     if sPath == "/stop":
       fShowDebugOutput("GET %s => stopping..." % (sPath,));
       oSelf.fStop();
-      return foCreateResponseForRequest(oRequest, 200, gsTextMediaType, "Stopping");
+      return foCreateResponseForRequest(oRequest, 200, gsbTextMediaType, b"Stopping");
     
     # Path not found
     fShowDebugOutput("GET %s => not found!" % (sPath,));
-    return foCreateResponseForRequest(oRequest, 404, gsTextMediaType, "URL %s not found" % json.dumps(oRequest.sURL));
+    return foCreateResponseForRequest(oRequest, 404, gsbTextMediaType, b"URL %s not found" % oRequest.sbURL);

@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8">
     <title>Loading...</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js">/* https://jquery.com/ */</script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js">/* https://www.jstree.com/ */</script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.5.11/split.min.js">/* https://split.js.org/ */</script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.0/showdown.min.js">/* http://showdownjs.com/ */</script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.2.228/pdf.js">/* https://github.com/mozilla/pdf.js */</script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js">/* https://highlightjs.org */</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js">/* https://jquery.com/ */</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.11/jstree.min.js">/* https://www.jstree.com/ */</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.11/themes/default/style.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.4/split.min.js">/* https://split.js.org/ */</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js">/* http://showdownjs.com/ */</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.min.js">/* https://github.com/mozilla/pdf.js */</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.0.1/highlight.min.js">/* https://highlightjs.org */</script>
     <script>
       "use strict";
       var goTreeContainer = null,
@@ -123,9 +123,31 @@
               } else if (dxData.sType == "url-link") {
                 open(dxData.sData, "_blank");
               } else if (dxData.sType == "iframe") {
-                let oIFrame = goDetailsContainer.appendChild(document.createElement("iframe"));
-                oIFrame.className = "iframe-container";
+                let oIFrameContainer = goDetailsContainer.appendChild(document.createElement("div")),
+                    oIFrame = oIFrameContainer.appendChild(document.createElement("iframe"));
+                oIFrameContainer.className = "iframe-container";
+                oIFrame.className = "iframe";
                 oIFrame.src = dxData.sData;
+              } else if (dxData.sType == "image") {
+                let oImageContainer = goDetailsContainer.appendChild(document.createElement("div")),
+                    oImage = oImageContainer.appendChild(new Image());
+                oImageContainer.className = "image-container";
+                oImage.className = "image";
+                oImage.src = dxData.sData;
+              } else if (dxData.sType == "video") {
+                let oVideoContainer = goDetailsContainer.appendChild(document.createElement("div")),
+                    oVideo = oVideoContainer.appendChild(document.createElement("video"));
+                oVideoContainer.className = "video-container";
+                oVideo.className = "video";
+                oVideo.controls = true;
+                oVideo.src = dxData.sData;
+              } else if (dxData.sType == "audio") {
+                let oAudioContainer = goDetailsContainer.appendChild(document.createElement("div")),
+                    oAudio = oAudioContainer.appendChild(document.createElement("audio"));
+                oAudioContainer.className = "audio-container";
+                oAudio.className = "audio";
+                oAudio.controls = true;
+                oAudio.src = dxData.sData;
               } else {
                 let oUnknownDIV = goDetailsContainer.appendChild(document.createElement("div"));
                 oUnknownDIV.className = "unknown-container";
@@ -302,6 +324,26 @@
         padding: 0;
         width: 100%;
         height: 100%;
+      }
+      .iframe {
+        margin: 0;
+        border: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .image-container, .video-container, .audio-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+      }
+      .image, .video, .audio {
+        border: 1px solid #888;
+        background: #FFF;
+        max-width: 100%;
+        max-height: 100%;
       }
       .unknown-container {
         margin: 10px;

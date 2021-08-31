@@ -41,7 +41,7 @@ def foCreateResponseForRequestAndFile(oRequest, oFile):
   # is no known media type for this extension.
   return oRequest.foCreateResponse(
     uzStatusCode = 200,
-    sb0MediaType = mHTTPProtocol.fsb0GetMediaTypeForExtension(oFile.sExtension) or b"application/octet-stream",
+    sb0MediaType = mHTTPProtocol.fsb0GetMediaTypeForExtension(oFile.s0Extension) or b"application/octet-stream",
     sb0Body = oFile.fsbRead(),
     bAutomaticallyAddContentLengthHeader = True,
   );

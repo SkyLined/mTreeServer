@@ -1,7 +1,7 @@
 {
   "a0sDebugAdditionalProductNames": [
-    "mDebugOutput",
-    "mConsole"
+    "mConsole",
+    "mDebugOutput"
   ],
   "a0sDependentOnProductNames": [
     "mFileSystemItem",
@@ -26,7 +26,7 @@
     "sbRepositoryName": "mTreeServer",
     "sbUserName": "SkyLined"
   },
-  "oProductVersion": "2021-08-19 20:22",
+  "oProductVersion": "2021-10-29 09:59",
   "s0PythonModuleName": "mTreeServer",
   "sProductAuthor": "SkyLined",
   "sProductName": "mTreeServer",

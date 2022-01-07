@@ -20,7 +20,7 @@ from mNotProvided import *;
 
 from .cTreeNode import cTreeNode;
 
-goIndexHTMLFile = cFileSystemItem(__file__).oParent.foGetChild("index.html", bMustBeFile = True);
+goIndexHTMLFile = cFileSystemItem(__file__).oParent.foGetChild("index.html").foMustBeFile();
 gsbJSONMediaType = mHTTPProtocol.fsb0GetMediaTypeForExtension("json");
 assert gsbJSONMediaType, \
     "Could not get media type for JSON data";

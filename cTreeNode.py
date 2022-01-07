@@ -16,7 +16,7 @@ def gfCheckIfIdIsUsedInTreeForNode(sId, oRootNode, oNode):
   assert oExistingNodeWithId is None, \
       "%s cannot have id %s because it is already used in the tree by %s" % (oNode.sName, sId, oExistingNodeWithId.sName);
 
-goIconsFolder = cFileSystemItem(__file__).oParent.foGetChild("icons", bMustBeFolder = True);
+goIconsFolder = cFileSystemItem(__file__).oParent.foGetChild("icons").foMustBeFolder();
 
 class cTreeNode(object):
   sNamespace = "cTreeNode";

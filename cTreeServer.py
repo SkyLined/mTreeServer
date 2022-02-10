@@ -5,7 +5,8 @@ try: # mDebugOutput use is Optional
 except ModuleNotFoundError as oException:
   if oException.args[0] != "No module named 'mDebugOutput'":
     raise;
-  ShowDebugOutput = fShowDebugOutput = lambda x: x; # NOP
+  ShowDebugOutput = lambda fx: fx; # NOP
+  fShowDebugOutput = lambda x, s0 = None: x; # NOP
 
 from mFileSystemItem import cFileSystemItem;
 import mHTTPProtocol;
@@ -20,7 +21,7 @@ from mNotProvided import *;
 
 from .cTreeNode import cTreeNode;
 
-goIndexHTMLFile = cFileSystemItem(__file__).oParent.foGetChild("index.html").foMustBeFile();
+goIndexHTMLFile = cFileSystemItem(__file__).o0Parent.foGetChild("index.html").foMustBeFile();
 gsbJSONMediaType = mHTTPProtocol.fsb0GetMediaTypeForExtension("json");
 assert gsbJSONMediaType, \
     "Could not get media type for JSON data";

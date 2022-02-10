@@ -5,7 +5,8 @@ try: # mDebugOutput use is Optional
 except ModuleNotFoundError as oException:
   if oException.args[0] != "No module named 'mDebugOutput'":
     raise;
-  ShowDebugOutput = fShowDebugOutput = lambda x: x; # NOP
+  ShowDebugOutput = lambda fx: fx; # NOP
+  fShowDebugOutput = lambda x, s0 = None: x; # NOP
 
 from mFileSystemItem import cFileSystemItem;
 import mHTTPProtocol;
@@ -16,7 +17,7 @@ def gfCheckIfIdIsUsedInTreeForNode(sId, oRootNode, oNode):
   assert oExistingNodeWithId is None, \
       "%s cannot have id %s because it is already used in the tree by %s" % (oNode.sName, sId, oExistingNodeWithId.sName);
 
-goIconsFolder = cFileSystemItem(__file__).oParent.foGetChild("icons").foMustBeFolder();
+goIconsFolder = cFileSystemItem(__file__).o0Parent.foGetChild("icons").foMustBeFolder();
 
 class cTreeNode(object):
   sNamespace = "cTreeNode";
@@ -33,7 +34,7 @@ class cTreeNode(object):
     oSelf.bDisabled = bDisabled;
     oSelf.bSelected = bSelected;
     oSelf.sToolTip = sToolTip;
-    oSelf.__oParent = None;
+    oSelf.__o0Parent = None;
     oSelf.__aoChildren = [];
   
   def foCreateChild(oSelf, sName, *txAdditionalArguments, **dxAdditionalArguments):
@@ -45,8 +46,8 @@ class cTreeNode(object):
   def sId(oSelf):
     if oSelf.__sId:
       return oSelf.__sId;
-    if oSelf.__oParent:
-      return "%s>anonymous #%d" % (oSelf.__oParent.sId, oSelf.__oParent.__aoChildren.index(oSelf));
+    if oSelf.__o0Parent:
+      return "%s>anonymous #%d" % (oSelf.__o0Parent.sId, oSelf.__o0Parent.__aoChildren.index(oSelf));
     return "##Anonymous root##";
   
   @sId.setter
@@ -88,15 +89,15 @@ class cTreeNode(object):
     return None;
   
   @property
-  def oParent(oSelf):
-    return oSelf.__oParent;
+  def o0Parent(oSelf):
+    return oSelf.__o0Parent;
   
   @property
   def oRoot(oSelf):
     # Ascend to the root node.
     oNodeInChainToRoot = oSelf;
-    while oNodeInChainToRoot.oParent:
-      oNodeInChainToRoot = oNodeInChainToRoot.oParent;
+    while oNodeInChainToRoot.o0Parent:
+      oNodeInChainToRoot = oNodeInChainToRoot.o0Parent;
     return oNodeInChainToRoot;
   
   @property
@@ -119,24 +120,24 @@ class cTreeNode(object):
     assert oChild in oSelf.__aoChildren, \
         "%s is not a child of %s" % (oChild.sName, oSelf.sName);
     oSelf.__aoChildren.remove(oChild);
-    oChild.__oParent = None;
+    oChild.__o0Parent = None;
   
   def fRemoveChildren(oSelf):
     while oSelf.__aoChildren:
-      oSelf.__aoChildren.pop().__oParent = None;
+      oSelf.__aoChildren.pop().__o0Parent = None;
   
   def fRemove(oSelf):
-    oParent = oSelf.oParent;
-    assert oParent, \
+    o0Parent = oSelf.o0Parent;
+    assert o0Parent, \
         "%s does not have a parent" % oSelf.sName;
-    oParent.fRemoveChild(oSelf);
+    o0Parent.fRemoveChild(oSelf);
   
   def fAppendChild(oSelf, oChild):
-    assert oChild.oParent is None, \
+    assert oChild.o0Parent is None, \
         "%s already has a parent" % oSelf.sName;
     gfCheckIfIdIsUsedInTreeForNode(oChild.__sId, oSelf.oRoot, oChild);
     oSelf.__aoChildren.append(oChild);
-    oChild.__oParent = oSelf;
+    oChild.__o0Parent = oSelf;
   
   def fDiscardUserState(oSelf):
     oSelf.bOpened = None;

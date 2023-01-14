@@ -1,7 +1,8 @@
 {
   "a0sDebugAdditionalProductNames": [
     "mConsole",
-    "mDebugOutput"
+    "mDebugOutput",
+    "mWindowsSDK"
   ],
   "a0sDependentOnProductNames": [
     "mFileSystemItem",
@@ -9,8 +10,7 @@
     "mHTTPProtocol",
     "mMultiThreading",
     "mNotProvided",
-    "mTCPIPConnection",
-    "mWindowsSDK"
+    "mTCPIPConnection"
   ],
   "a0sReleaseAdditionalProductNames": [
     "mHTTPServer",

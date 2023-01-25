@@ -48,9 +48,7 @@ try:
   
   import sys, urllib.request, urllib.parse, urllib.error;
   from mHTTPClient import cHTTPClient;
-  from mFileSystemItem import cFileSystemItem;
-  from mTreeServer import cTreeServer, cTreeNode;
-  from mMultiThreading import cThread;
+  from mTreeServer import cTreeServer;
   
   bQuick = False;
   bFull = False;

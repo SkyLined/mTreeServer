@@ -168,10 +168,7 @@ class cTreeServer(cTreeNode):
     # Filter out invalid methods
     if oRequest.sbMethod.upper() != b"GET":
       fShowDebugOutput("Method %s is not allows" % repr(oRequest.sbMethod));
-      return (
-        foCreateResponseForRequest(oRequest, 405, gsTextMediaType, b"Method %s not allowed" % oRequest.sbMethod),
-        True
-      );
+      return foCreateResponseForRequest(oRequest, 405, gsbTextMediaType, b"Method %s not allowed" % oRequest.sbMethod);
     # handle index HTML
     if sPath == "/":
       fShowDebugOutput("GET %s => index file %s" % (sPath, goIndexHTMLFile));

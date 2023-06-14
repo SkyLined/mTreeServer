@@ -21,7 +21,7 @@ from mNotProvided import fAssertType;
 
 from .cTreeNode import cTreeNode;
 
-goIndexHTMLFile = cFileSystemItem(__file__).o0Parent.foGetChild("index.html").foMustBeFile();
+goIndexHTMLFileSystemItem = cFileSystemItem(__file__).o0Parent.foGetChild("index.html").foMustBeFile();
 gsbJSONMediaType = mHTTPProtocol.fsb0GetMediaTypeForExtension("json");
 assert gsbJSONMediaType, \
     "Could not get media type for JSON data";
@@ -29,7 +29,14 @@ gsbTextMediaType = mHTTPProtocol.fsb0GetMediaTypeForExtension("txt");
 assert gsbTextMediaType, \
     "Could not get media type for TEXT data";
 
-def foCreateResponseForRequest(oRequest, uStatusCode, sbMediaType, sbBody, sb0Charset = None):
+def foCreateResponseForRequest(
+    oRequest,
+    *,
+    uStatusCode = 200,
+    sbMediaType = None,
+    sbBody = None,
+    sb0Charset = None,
+  ):
   return oRequest.foCreateResponse(
     uzStatusCode = uStatusCode,
     sb0MediaType = sbMediaType,
@@ -122,7 +129,7 @@ class cTreeServer(cTreeNode):
   @ShowDebugOutput
   def fdxGetOfflineContent(oSelf, fProgressCallback = None):
     dxOfflineContent = {
-      "index.html": goIndexHTMLFile,
+      "index.html": goIndexHTMLFileSystemItem,
       "dxTreeData.json": oSelf.fsGetTreeDataJSON(),
     };
     for (sRelativeURL, oFile) in oSelf.doFile_by_sRelativeURL.items():
@@ -158,7 +165,10 @@ class cTreeServer(cTreeNode):
 #    print ("oRequestURL: %s" % str(oRequestURL));
 #    print ("oRequest.sURLDecodedPath: %s" % repr(oRequestURL.sURLDecodedPath));
     return (
-      oSelf.__foCreateResponseForRequestAndPath(oRequest, sPath),
+      oSelf.__foCreateResponseForRequestAndPath(
+        oRequest,
+        sPath,
+      ),
       None, # Allways stay connected to client.
     );
   
@@ -168,19 +178,33 @@ class cTreeServer(cTreeNode):
     # Filter out invalid methods
     if oRequest.sbMethod.upper() != b"GET":
       fShowDebugOutput("Method %s is not allows" % repr(oRequest.sbMethod));
-      return foCreateResponseForRequest(oRequest, 405, gsbTextMediaType, b"Method %s not allowed" % oRequest.sbMethod);
+      return foCreateResponseForRequest(
+        oRequest,
+        uStatusCode = 405,
+        sbBody = b"Method %s not allowed" % oRequest.sbMethod,
+      );
     # handle index HTML
     if sPath == "/":
-      fShowDebugOutput("GET %s => index file %s" % (sPath, goIndexHTMLFile));
-      return foCreateResponseForRequestAndFile(oRequest, goIndexHTMLFile);
+      fShowDebugOutput("GET %s => index file %s" % (sPath, goIndexHTMLFileSystemItem.sPath));
+      return foCreateResponseForRequestAndFile(
+        oRequest,
+        goIndexHTMLFileSystemItem,
+      );
     # handle icons
     if sPath.startswith("/icons/") and "/" in sPath[7:]:
       sNamespace, sIconFileName = sPath[7:].split("/", 1);
       for oDescendant in oSelf.aoDescendants:
         if oDescendant.sNamespace == sNamespace and oDescendant.oIconFile and oDescendant.oIconFile.sName == sIconFileName:
           fShowDebugOutput("GET %s => icon file %s" % (sPath, oDescendant.oIconFile));
-          return foCreateResponseForRequestAndFile(oRequest, oDescendant.oIconFile);
-      fShowDebugOutput("GET %s => icons namespace %s does not have a file %s" % (sPath, repr(sNamespace), repr(sIconFileName)));
+          return foCreateResponseForRequestAndFile(
+            oRequest,
+            oDescendant.oIconFile,
+          );
+      fShowDebugOutput("GET %s => icons namespace %s does not have a file %s" % (
+        sPath,
+        repr(sNamespace),
+        repr(sIconFileName),
+      ));
     oFile = oSelf.doFile_by_sRelativeURL.get(sPath);
     if oFile:
       fShowDebugOutput("GET %s => file %s" % (sPath, oFile));
@@ -190,11 +214,19 @@ class cTreeServer(cTreeNode):
       fShowDebugOutput("GET %s => tree data" % (sPath,));
       sBody = oSelf.fsGetTreeDataJSON();
       oSelf.fDiscardUserState();
-      return foCreateResponseForRequest(oRequest, 200, gsbJSONMediaType, bytes(sBody, "utf-8", "strict"), b"utf-8");
+      return foCreateResponseForRequest(
+        oRequest,
+        sbMediaType = gsbJSONMediaType,
+        sbBody = bytes(sBody, "utf-8", "strict"),
+        sb0Charset = b"utf-8",
+      );
     if sPath == "/stop":
       fShowDebugOutput("GET %s => stopping..." % (sPath,));
       oSelf.fStop();
-      return foCreateResponseForRequest(oRequest, 200, gsbTextMediaType, b"Stopping");
+      return foCreateResponseForRequest(
+        oRequest,
+        sbBody = b"Stopping",
+      );
     
     # Path not found
     fShowDebugOutput("GET %s => not found!" % (sPath,));

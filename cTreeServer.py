@@ -159,7 +159,7 @@ class cTreeServer(cTreeNode):
 #    print ("oRequest.sURLDecodedPath: %s" % repr(oRequestURL.sURLDecodedPath));
     return (
       oSelf.__foCreateResponseForRequestAndPath(oRequest, sPath),
-      True, # Allways stay connected to client.
+      None, # Allways stay connected to client.
     );
   
   @ShowDebugOutput

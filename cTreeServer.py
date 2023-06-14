@@ -17,7 +17,7 @@ except ModuleNotFoundError as oException:
     raise;
   m0HTTPServer = None;
 
-from mNotProvided import *;
+from mNotProvided import fAssertType;
 
 from .cTreeNode import cTreeNode;
 

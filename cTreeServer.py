@@ -42,7 +42,6 @@ def foCreateResponseForRequest(
     sb0MediaType = sbMediaType,
     sb0Body = sbBody,
     sb0Charset = sb0Charset,
-    bAutomaticallyAddContentLengthHeader = True,
   );
 def foCreateResponseForRequestAndFile(oRequest, oFile):
   # Pick a media type based on the extension or use the default if there
@@ -51,7 +50,6 @@ def foCreateResponseForRequestAndFile(oRequest, oFile):
     uzStatusCode = 200,
     sb0MediaType = mHTTPProtocol.fsb0GetMediaTypeForExtension(oFile.s0Extension) or b"application/octet-stream",
     sb0Body = oFile.fsbRead(),
-    bAutomaticallyAddContentLengthHeader = True,
   );
 
 class cTreeServer(cTreeNode):

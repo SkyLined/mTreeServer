@@ -167,7 +167,8 @@ class cTreeServer(cTreeNode):
         oRequest,
         sPath,
       ),
-      None, # Allways stay connected to client.
+      oRequest.bIndicatesConnectionShouldBeClosed,
+      None, # No next connection handler
     );
   
   @ShowDebugOutput
